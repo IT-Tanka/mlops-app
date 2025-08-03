@@ -14,8 +14,11 @@
     >
       <template #empty>
         <p>Drag and drop a CSV file here or click to select one.</p>
-        <p>Required CSV headers: experiment_id, metric_name, step, value</p>
-        <p v-if="uploadedFileName">File uploaded: <strong>{{ uploadedFileName }}</strong></p>
+        <small>Required CSV headers: experiment_id, metric_name, step, value</small>
+        <div v-if="uploadedFileName" class="file-name-container">
+          <p>File uploaded: <strong>{{ uploadedFileName }}</strong></p>
+          <i class="pi pi-times clear-icon" @click="clearFile" title="Clear file"></i>
+        </div>
       </template>
     </FileUpload>
 
@@ -63,7 +66,9 @@ export default defineComponent({
         isLoading.value = false;
         return;
       }
+
       store.resetData();
+
       // Warn about large files but continue processing
       if (file.size > 50000000) {
         toast.add({
@@ -222,11 +227,23 @@ export default defineComponent({
       reader.readAsText(file);
     };
 
+    const clearFile = () => {
+      store.resetData();
+      uploadedFileName.value = null;
+      toast.add({
+        severity: 'info',
+        summary: 'File Cleared',
+        detail: 'The uploaded file and its data have been removed.',
+        life: 3000,
+      });
+    };
+
     return {
       handleFileUpload,
       isLoading,
       fileUpload,
       uploadedFileName,
+      clearFile,
     };
   },
 });
@@ -248,5 +265,22 @@ export default defineComponent({
   align-items: center;
   gap: 0.5rem;
   margin-top: 1rem;
+}
+
+.file-name-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clear-icon {
+  cursor: pointer;
+  color: #ff4d4f;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.clear-icon:hover {
+  color: #cc0000;
 }
 </style>
