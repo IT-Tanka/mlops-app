@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue';
+import { defineComponent, computed, ref, watch } from 'vue';
 import { useExperimentStore } from '../stores/experimentStore';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -56,7 +56,20 @@ export default defineComponent({
 
     // Local state to hold selected experiment objects
     const selectedExperimentObjects = ref<{ experiment_id: string }[]>([]);
-
+// Sync selectedExperimentObjects with store.uniqueExperiments
+  watch(
+    () => store.uniqueExperiments,
+    (newExperiments) => {
+      if (newExperiments.length === 0) {
+        selectedExperimentObjects.value = [];
+      } else {
+        selectedExperimentObjects.value = selectedExperimentObjects.value.filter(exp =>
+          newExperiments.includes(exp.experiment_id)
+        );
+      }
+    },
+    { deep: true }
+  );
     // Sync selected experiment IDs with the store
     const handleSelection = (value: { experiment_id: string }[]) => {
       selectedExperimentObjects.value = value;

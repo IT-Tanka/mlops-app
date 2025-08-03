@@ -63,7 +63,7 @@ export default defineComponent({
         isLoading.value = false;
         return;
       }
-
+      store.resetData();
       // Warn about large files but continue processing
       if (file.size > 50000000) {
         toast.add({

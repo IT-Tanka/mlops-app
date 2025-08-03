@@ -61,6 +61,19 @@ export default defineComponent({
     const isLoading = ref(false);
     const multiSelect = ref<InstanceType<typeof MultiSelect> | null>(null);
 
+      watch(
+  () => store.uniqueMetrics,
+  (newMetrics) => {
+    if (newMetrics.length === 0) {
+      selectedMetrics.value = [];
+    } else {
+      selectedMetrics.value = selectedMetrics.value.filter(metric =>
+        newMetrics.includes(metric.name)
+      );
+    }
+  },
+  { deep: true }
+);
     // Prepare available metrics from the store
     const metrics = computed(() =>
       store.metrics.map(name => ({ name }))

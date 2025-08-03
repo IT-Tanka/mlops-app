@@ -38,7 +38,7 @@ export const useExperimentStore = defineStore('experiment', {
     },
 
     // Clears all stored data
-    reset() {
+    resetData() {
       this.data = [];
       this.selectedExperiments = [];
       this.uniqueExperiments = [];
