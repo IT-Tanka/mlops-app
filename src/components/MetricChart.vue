@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue';
+import { defineComponent, ref, computed, watch, nextTick } from 'vue';
 import { useExperimentStore } from '../stores/experimentStore';
 import MultiSelect from 'primevue/multiselect';
 import { Line as LineChart } from 'vue-chartjs';
@@ -61,19 +61,21 @@ export default defineComponent({
     const isLoading = ref(false);
     const multiSelect = ref<InstanceType<typeof MultiSelect> | null>(null);
 
-      watch(
-  () => store.uniqueMetrics,
-  (newMetrics) => {
-    if (newMetrics.length === 0) {
-      selectedMetrics.value = [];
-    } else {
-      selectedMetrics.value = selectedMetrics.value.filter(metric =>
-        newMetrics.includes(metric.name)
-      );
-    }
-  },
-  { deep: true }
-);
+    // Reset selectedMetrics when store data is reset
+    watch(
+      () => store.uniqueMetrics,
+      (newMetrics) => {
+        if (newMetrics.length === 0) {
+          selectedMetrics.value = [];
+        } else {
+          selectedMetrics.value = selectedMetrics.value.filter(metric =>
+            newMetrics.includes(metric.name)
+          );
+        }
+      },
+      { deep: true }
+    );
+
     // Prepare available metrics from the store
     const metrics = computed(() =>
       store.metrics.map(name => ({ name }))
@@ -124,8 +126,6 @@ export default defineComponent({
 
     // Handle metric selection and close MultiSelect
     const handleMetricSelection = () => {
-      // Automatically close MultiSelect after selection
-      // Comment out the next line to keep MultiSelect open after selection
       multiSelect.value?.hide();
     };
 
@@ -135,8 +135,8 @@ export default defineComponent({
       async () => {
         if (selectedMetrics.value.length && store.selectedExperiments.length) {
           isLoading.value = true;
-          // Ensure minimum visibility for preloader
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await nextTick(); // Ensure spinner renders
+          await new Promise(resolve => setTimeout(resolve, 500));
           isLoading.value = false;
         }
       },
