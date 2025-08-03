@@ -23,7 +23,6 @@
     </FileUpload>
 
     <div v-if="isLoading" class="loading-container">
-      <ProgressBar mode="indeterminate" class="progress" />
       <p>Processing file...</p>
     </div>
   </div>
@@ -35,15 +34,13 @@ import { useExperimentStore } from '../stores/experimentStore';
 import { useToast } from 'primevue/usetoast';
 import Papa from 'papaparse';
 import FileUpload from 'primevue/fileupload';
-import ProgressBar from 'primevue/progressbar';
 import type { FileUploadUploaderEvent } from 'primevue/fileupload';
 import type { ExperimentData } from '../types/experiment';
 
 export default defineComponent({
   name: 'FileUploader',
   components: {
-    FileUpload,
-    ProgressBar,
+    FileUpload
   },
   setup() {
     const fileUpload = ref();
