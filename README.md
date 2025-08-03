@@ -30,7 +30,6 @@ This project is a simple frontend application for an MLOps platform, designed to
 - Responsive design is  implemented.
 
 ## Future Improvements
-- Add support for multiple metric comparisons.
 - Implement data export functionality.
 - Enhance chart interactivity (e.g., zooming).
 - Add loading states and error boundaries.
@@ -44,6 +43,7 @@ This project is a simple frontend application for an MLOps platform, designed to
 2. Install dependencies:
    ```bash
    npm install
+   
    
 3. Run the development server:
    ```bash
