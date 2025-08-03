@@ -4,9 +4,10 @@
 This project is a simple frontend application for an MLOps platform, designed to manage experiment tracking for machine learning models. It allows users to upload CSV files containing experiment logs, view a list of experiments, and visualize metric data.
 
 ## Usage
-- Upload a CSV file via the "Upload CSV" button.
-- View the list of experiments and select multiple entries.
-- Choose a metric from the dropdown to visualize data for selected experiments.
+- Upload a CSV file using the "Upload CSV" button to populate the experiment list.
+- Use the search and filter options in the experiment table to find specific experiments.
+- Select multiple experiments from the table to visualize their data.
+- Choose one or more metrics from the dropdown to display charts for the selected experiments.
 
 ## Technologies
 - **Framework**: Vue.js
