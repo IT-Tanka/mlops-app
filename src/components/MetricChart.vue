@@ -3,21 +3,12 @@
     <h3>Metric Charts</h3>
 
     <!-- Dropdown for selecting metric -->
-    <Dropdown
-      v-model="selectedMetric"
-      :options="metrics"
-      optionLabel="name"
-      placeholder="Select a metric"
-      class="dropdown"
-    />
+    <Dropdown v-model="selectedMetric" :options="metrics" optionLabel="name" placeholder="Select a metric"
+      class="dropdown" />
 
     <div v-if="selectedMetric" class="chart-container">
       <!-- Line chart rendered if data is available -->
-      <LineChart
-        v-if="chartData.datasets.length"
-        :data="chartData"
-        :options="chartOptions"
-      />
+      <LineChart v-if="chartData.datasets.length" :data="chartData" :options="chartOptions" />
       <p v-else>No data available for the selected metric and experiments.</p>
     </div>
 
@@ -97,7 +88,10 @@ export default defineComponent({
       },
       plugins: {
         legend: { display: true },
-        tooltip: { mode: 'index', intersect: false },
+        tooltip: {
+          mode: 'index' as const,
+          intersect: false,
+        },
       },
     };
 
