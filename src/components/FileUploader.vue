@@ -7,22 +7,22 @@
       @uploader="handleFileUpload"
       :auto="true"
       accept=".csv"
-      :maxFileSize="50000000"
       chooseLabel="Upload CSV"
       :disabled="isLoading"
       :showUploadButton="false"
       :showCancelButton="false"
     >
-
-
       <template #empty>
         <p>Drag and drop a CSV file here or click to select one.</p>
+        <p>Required CSV headers: experiment_id, metric_name, step, value</p>
         <p v-if="uploadedFileName">File uploaded: <strong>{{ uploadedFileName }}</strong></p>
       </template>
-
     </FileUpload>
 
-    <ProgressBar v-if="isLoading" mode="indeterminate" class="progress" />
+    <div v-if="isLoading" class="loading-container">
+      <ProgressBar mode="indeterminate" class="progress" />
+      <p>Processing file...</p>
+    </div>
   </div>
 </template>
 
@@ -60,15 +60,16 @@ export default defineComponent({
           detail: 'No file selected',
           life: 3000,
         });
+        isLoading.value = false;
         return;
       }
 
-
+      // Warn about large files but continue processing
       if (file.size > 50000000) {
         toast.add({
           severity: 'warn',
           summary: 'Warning',
-          detail: 'File is too large (>50MB). Parsing may take time.',
+          detail: 'File is larger than 50MB. Processing may take longer.',
           life: 5000,
         });
       }
@@ -76,90 +77,149 @@ export default defineComponent({
       isLoading.value = true;
 
       const requiredFields = ['experiment_id', 'metric_name', 'step', 'value'];
-      let isValid = true;
-      const parsedData: ExperimentData[] = [];
 
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        dynamicTyping: true,
-        step: (row: Papa.ParseStepResult<any>) => {
-          const data = row.data;
-          if (!data) return;
-
-          if (!requiredFields.every(field => field in data)) {
-            isValid = false;
-            toast.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Missing required CSV columns',
-              life: 3000,
-            });
-            return;
-          }
-
-          const step = Number(data.step);
-          const value = Number(data.value);
-          if (isNaN(step) || isNaN(value)) {
-            isValid = false;
-            toast.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Invalid data: step=${data.step}, value=${data.value}`,
-              life: 3000,
-            });
-            return;
-          }
-
-          parsedData.push({
-            experiment_id: String(data.experiment_id),
-            metric_name: String(data.metric_name),
-            step,
-            value,
+      // Read the first line to check headers
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        if (!text) {
+          toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Unable to read file content',
+            life: 3000,
           });
-        },
-        complete: () => {
           isLoading.value = false;
+          fileUpload.value?.clear();
+          return;
+        }
 
-          if (isValid && parsedData.length > 0) {
-            store.setData(parsedData);
-            uploadedFileName.value = file.name;
-            console.log(' file.name',  file.name);
+        // Check headers
+        const firstLine = text.split('\n')[0].trim();
+        const headers = firstLine.split(',').map(h => h.trim());
+        const missingHeaders = requiredFields.filter(field => !headers.includes(field));
+
+        if (missingHeaders.length > 0) {
+          toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Missing required CSV headers: ${missingHeaders.join(', ')}`,
+            life: 3000,
+          });
+          isLoading.value = false;
+          fileUpload.value?.clear();
+          return;
+        }
+
+        // Parse CSV if headers are valid
+        const parsedData: ExperimentData[] = [];
+        let isValid = true;
+
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          dynamicTyping: true,
+          step: (row: Papa.ParseStepResult<any>) => {
+            const data = row.data;
+            if (!data) {
+              isValid = false;
+              toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Invalid row data',
+                life: 3000,
+              });
+              return;
+            }
+
+            // Validate required fields
+            if (!requiredFields.every(field => field in data)) {
+              isValid = false;
+              toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Missing required fields in row',
+                life: 3000,
+              });
+              return;
+            }
+
+            const step = Number(data.step);
+            const value = Number(data.value);
+            if (isNaN(step) || isNaN(value)) {
+              isValid = false;
+              toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: `Invalid data: step=${data.step}, value=${data.value}`,
+                life: 3000,
+              });
+              return;
+            }
+
+            parsedData.push({
+              experiment_id: String(data.experiment_id),
+              metric_name: String(data.metric_name),
+              step,
+              value,
+            });
+          },
+          complete: () => {
+            isLoading.value = false;
+
+            if (isValid && parsedData.length > 0) {
+              store.setData(parsedData);
+              uploadedFileName.value = file.name;
+              toast.add({
+                severity: 'success',
+                summary: 'Success',
+                detail: `File uploaded successfully (${parsedData.length} rows)`,
+                life: 3000,
+              });
+              fileUpload.value?.clear();
+            } else if (parsedData.length === 0) {
+              toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'The file is empty or contains no valid data',
+                life: 3000,
+              });
+            } else {
+              toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Invalid format or data in file',
+                life: 3000,
+              });
+            }
+          },
+          error: (error: Error) => {
+            isLoading.value = false;
+            uploadedFileName.value = null;
             toast.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: `File uploaded successfully (${parsedData.length} rows)`,
+              severity: 'error',
+              summary: 'Parsing Error',
+              detail: error.message,
               life: 3000,
             });
             fileUpload.value?.clear();
-          } else if (parsedData.length === 0) {
-            toast.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'The file is empty',
-              life: 3000,
-            });
-          } else {
-            toast.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Invalid format or data',
-              life: 3000,
-            });
-          }
-        },
-        error: (error: Error) => {
-          isLoading.value = false;
-          uploadedFileName.value = null;
-          toast.add({
-            severity: 'error',
-            summary: 'Parsing Error',
-            detail: error.message,
-            life: 3000,
-          });
-        },
-        worker: true,
-      });
+          },
+          worker: true,
+        });
+      };
+
+      reader.onerror = () => {
+        isLoading.value = false;
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to read file',
+          life: 3000,
+        });
+        fileUpload.value?.clear();
+      };
+
+      reader.readAsText(file);
     };
 
     return {
@@ -178,6 +238,15 @@ export default defineComponent({
 }
 
 .progress {
+  margin-top: 0.5rem;
+  height: 6px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 1rem;
 }
 </style>
