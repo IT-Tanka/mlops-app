@@ -22,6 +22,7 @@ import { useExperimentStore } from '../stores/experimentStore';
 import Dropdown from 'primevue/dropdown';
 import { Line as LineChart } from 'vue-chartjs';
 import { Chart, registerables } from 'chart.js';
+import type { ChartOptions } from 'chart.js';
 Chart.register(...registerables);
 
 interface MetricOption {
@@ -72,13 +73,13 @@ export default defineComponent({
     });
 
     // Chart.js options
-    const chartOptions = {
+    const chartOptions: ChartOptions<'line'> = {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
           title: { display: true, text: 'Step' },
-          type: 'linear',
+          type: 'linear' as const,
           ticks: { precision: 0 },
         },
         y: {
@@ -94,6 +95,7 @@ export default defineComponent({
         },
       },
     };
+
 
     // Debug string for displaying state information (optional)
     const chartDataDebug = computed(() => {
