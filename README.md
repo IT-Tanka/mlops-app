@@ -47,6 +47,6 @@ This project is a simple frontend application for an MLOps platform, designed to
    
 3. Run the development server:
    ```bash
-  npm run dev
+   npm run dev
 
 
