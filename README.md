@@ -1,8 +1,7 @@
 # 📉mlops-app
-![File Uploader Screenshot] (mlops_screen.png)
 ## Overview
 This project is a simple frontend application for an MLOps platform, designed to manage experiment tracking for machine learning models. It allows users to upload CSV files containing experiment logs, view a list of experiments, and visualize metric data.
-
+ ![](mlops_screen.png)
 ## Usage
 - Upload a CSV file using the "Upload CSV" button to populate the experiment list.
 - Use the search and filter options in the experiment table to find specific experiments.
